@@ -175,11 +175,10 @@ def main():
                 if not text or len(text.strip()) < args.min_chars:
                     continue
 
-                rel = str(path.relative_to(root)).replace("\\", "/")
                 records.append(
                     {
                         "repo": root.name,
-                        "path": rel,
+                        "path": str(path.relative_to(root)).replace("\\", "/"),
                         "lines": text.count("\n") + 1,
                         "exact_hash": hashlib.sha1(
                             text.encode("utf-8", "ignore")
@@ -191,10 +190,9 @@ def main():
     norm_map = defaultdict(list)
     for record in records:
         if len(record["norm_text"]) >= args.min_chars:
-            norm_hash = hashlib.sha1(
-                record["norm_text"].encode("utf-8", "ignore")
-            ).hexdigest()
-            norm_map[norm_hash].append(record)
+            norm_map[
+                hashlib.sha1(record["norm_text"].encode("utf-8", "ignore")).hexdigest()
+            ].append(record)
 
     norm_clusters = [c for c in norm_map.values() if len(c) >= 2]
 
@@ -280,10 +278,14 @@ def main():
 
         for repo in sorted(per_repo):
             handle.write(f"## Top Per-Repo Clusters: {repo}\n\n")
-            top_rows = sorted(
-                per_repo[repo], key=lambda r: (r["dup_lines_est"], r["copy_count"]), reverse=True
-            )[:20]
-            for i, row in enumerate(top_rows, 1):
+            for i, row in enumerate(
+                sorted(
+                    per_repo[repo],
+                    key=lambda r: (r["dup_lines_est"], r["copy_count"]),
+                    reverse=True,
+                )[:20],
+                1,
+            ):
                 handle.write(
                     f"{i}. **{row['cluster_id']}** ({row['mode']}): copies={row['copy_count']}, dup_lines~{row['dup_lines_est']}\n"
                 )
