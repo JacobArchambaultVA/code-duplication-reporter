@@ -105,6 +105,7 @@ def is_text_file(path: Path) -> bool:
     return (
         path.suffix.lower() in TEXT_EXTS
         or "jenkinsfile" in name
+        or "dockerfile" in name
         or name.endswith(".j2")
     )
 
