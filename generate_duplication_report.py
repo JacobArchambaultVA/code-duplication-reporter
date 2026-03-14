@@ -175,12 +175,6 @@ def main():
         help="Output directory under base-dir",
     )
     parser.add_argument(
-        "--max-bytes",
-        type=int,
-        default=2_000_000,
-        help="Skip files larger than this many bytes",
-    )
-    parser.add_argument(
         "--min-chars",
         type=int,
         default=80,
@@ -201,11 +195,6 @@ def main():
             for filename in fns:
                 path = Path(dp) / filename
                 if not is_text_file(path):
-                    continue
-                try:
-                    if path.stat().st_size > args.max_bytes:
-                        continue
-                except Exception:
                     continue
                 text = read_text(path)
                 if not text or len(text.strip()) < args.min_chars:
