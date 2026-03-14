@@ -157,6 +157,28 @@ def flatten_files(cluster):
     )
 
 
+def load_repos_from_file(path: Path):
+    text = read_text(path)
+    if text is None:
+        raise ValueError(f"Could not read repo list from {path}")
+
+    repos = []
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "#" in line:
+            line = line.split("#", 1)[0].strip()
+        if not line:
+            continue
+        repos.append(line.replace("\\", "/"))
+
+    if not repos:
+        raise ValueError(f"No repositories found in {path}")
+
+    return repos
+
+
 def main():
     parser = argparse.ArgumentParser(description="Generate duplicate-code report")
     parser.add_argument(
@@ -171,6 +193,10 @@ def main():
         help="Repository folder names under base-dir",
     )
     parser.add_argument(
+        "--repos-file",
+        help="Path to a text file containing one repo path per line (comments with # supported)",
+    )
+    parser.add_argument(
         "--output-dir",
         default="duplication-reports",
         help="Output directory under base-dir",
@@ -178,11 +204,22 @@ def main():
     args = parser.parse_args()
 
     base_dir = Path(args.base_dir)
+
+    repos = args.repos
+    if args.repos_file:
+        repos_file = Path(args.repos_file).expanduser()
+        if not repos_file.exists():
+            parser.error(f"Repos file not found: {repos_file}")
+        try:
+            repos = load_repos_from_file(repos_file)
+        except ValueError as exc:
+            parser.error(str(exc))
+
     out_dir = base_dir / args.output_dir
     out_dir.mkdir(parents=True, exist_ok=True)
 
     records = []
-    for root in (base_dir / repo for repo in args.repos):
+    for root in (base_dir / repo for repo in repos):
         if not root.exists():
             continue
         for dp, dns, fns in os.walk(root):

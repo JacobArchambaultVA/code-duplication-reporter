@@ -27,6 +27,7 @@ Default paths:
 - `--base-dir`: `~/source/repos`
 - `--output-dir`: `duplication-reports` (created under `--base-dir`)
 - `--repos`: built-in list in `generate_duplication_report.py`
+- `--repos-file`: optional text file with one repo path per line
 
 Example with custom repos and output dir:
 
@@ -35,4 +36,12 @@ python generate_duplication_report.py \
   --base-dir ~/source/repos \
   --repos repo-a repo-b repo-c \
   --output-dir duplication-reports
+```
+
+Example using a repo list file from a neighboring folder:
+
+```bash
+python generate_duplication_report.py \
+  --base-dir ~/source/repos \
+  --repos-file ../va-dev-onboarding/repos.txt
 ```
