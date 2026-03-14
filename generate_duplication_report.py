@@ -78,15 +78,11 @@ def read_text(path: Path):
 
 
 def normalize(text: str) -> str:
-    lines = []
-    for line in text.splitlines():
-        stripped = line.strip()
-        if not stripped:
-            continue
-        if stripped.startswith("#"):
-            continue
-        lines.append(stripped)
-    return "\n".join(lines)
+    return "\n".join(
+        stripped
+        for line in text.splitlines()
+        if (stripped := line.strip()) and not stripped.startswith("#")
+    )
 
 
 def dup_score(cluster) -> int:
@@ -118,16 +114,12 @@ def load_repos_from_file(path: Path):
     if text is None:
         raise ValueError(f"Could not read repo list from {path}")
 
-    repos = []
-    for raw in text.splitlines():
-        line = raw.strip()
-        if not line or line.startswith("#"):
-            continue
-        if "#" in line:
-            line = line.split("#", 1)[0].strip()
-        if not line:
-            continue
-        repos.append(line.replace("\\", "/"))
+    repos = [
+        cleaned
+        for raw in text.splitlines()
+        if (line := raw.strip()) and not line.startswith("#")
+        if (cleaned := line.split("#", 1)[0].strip().replace("\\", "/"))
+    ]
 
     if not repos:
         raise ValueError(f"No repositories found in {path}")
@@ -208,26 +200,23 @@ def main():
 
     norm_clusters = [c for c in norm_map.values() if len(c) >= 2]
 
-    rows = []
-    cluster_num = 1
-    for cluster in norm_clusters:
-        repos = sorted({item["repo"] for item in cluster})
-        canonical = choose_canonical(cluster)
-        rows.append(
-            {
-                "cluster_id": f"normalized-{cluster_num:04d}",
-                "mode": "normalized",
-                "scope": cluster_scope(cluster),
-                "repos": ", ".join(repos),
-                "repo_count": len(repos),
-                "copy_count": len(cluster),
-                "dup_lines_est": dup_score(cluster),
-                "canonical_repo": canonical["repo"],
-                "canonical_path": canonical["path"],
-                "files": flatten_files(cluster),
-            }
-        )
-        cluster_num += 1
+    rows = [
+        {
+            "cluster_id": f"normalized-{cluster_num:04d}",
+            "mode": "normalized",
+            "scope": cluster_scope(cluster),
+            "repos": ", ".join(repos),
+            "repo_count": len(repos),
+            "copy_count": len(cluster),
+            "dup_lines_est": dup_score(cluster),
+            "canonical_repo": canonical["repo"],
+            "canonical_path": canonical["path"],
+            "files": flatten_files(cluster),
+        }
+        for cluster_num, cluster in enumerate(norm_clusters, 1)
+        if (repos := sorted({item["repo"] for item in cluster}))
+        if (canonical := choose_canonical(cluster))
+    ]
 
     rows.sort(key=lambda r: (r["dup_lines_est"], r["copy_count"]), reverse=True)
 
