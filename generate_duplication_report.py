@@ -169,7 +169,8 @@ def main():
     out_dir = base_dir / args.output_dir
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    records = []
+    analyzed_files = 0
+    norm_map = defaultdict(list)
     for root in (base_dir / repo for repo in repos):
         if not root.exists():
             continue
@@ -183,23 +184,16 @@ def main():
                 if not text:
                     continue
 
-                records.append(
+                analyzed_files += 1
+                norm_map[
+                    hashlib.sha1(normalize(text).encode("utf-8", "ignore")).hexdigest()
+                ].append(
                     {
                         "repo": root.name,
                         "path": str(path.relative_to(root)).replace("\\", "/"),
                         "lines": text.count("\n") + 1,
-                        "exact_hash": hashlib.sha1(
-                            text.encode("utf-8", "ignore")
-                        ).hexdigest(),
-                        "norm_text": normalize(text),
                     }
                 )
-
-    norm_map = defaultdict(list)
-    for record in records:
-        norm_map[
-            hashlib.sha1(record["norm_text"].encode("utf-8", "ignore")).hexdigest()
-        ].append(record)
 
     rows = [
         {
@@ -257,7 +251,7 @@ def main():
     ) as handle:
         handle.write("# Workspace Duplication Report\n\n")
         handle.write(f"- Generated: {date.today().isoformat()}\n")
-        handle.write(f"- Files analyzed: {len(records)}\n")
+        handle.write(f"- Files analyzed: {analyzed_files}\n")
         handle.write("- Matching mode: normalized only\n")
         handle.write(f"- Normalized clusters: {len(rows)}\n")
         handle.write(f"- Cross-repo clusters: {len(cross)}\n\n")
