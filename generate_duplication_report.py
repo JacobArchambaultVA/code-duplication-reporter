@@ -94,13 +94,11 @@ def normalize(text: str) -> str:
 
 
 def dup_score(cluster) -> int:
-    counts = [item["lines"] for item in cluster]
-    return sum(counts) - max(counts)
+    return sum(item["lines"] for item in cluster) - max(item["lines"] for item in cluster)
 
 
 def cluster_scope(cluster) -> str:
-    repos = {item["repo"] for item in cluster}
-    return "cross-repo" if len(repos) > 1 else "per-repo"
+    return "cross-repo" if len({item["repo"] for item in cluster}) > 1 else "per-repo"
 
 
 def choose_canonical(cluster):
@@ -113,9 +111,9 @@ def choose_canonical(cluster):
 
 
 def flatten_files(cluster):
-    ordered = sorted(cluster, key=lambda x: (x["repo"], x["path"]))
     return "; ".join(
-        f"{item['repo']}:{item['path']} ({item['lines']} lines)" for item in ordered
+        f"{item['repo']}:{item['path']} ({item['lines']} lines)"
+        for item in sorted(cluster, key=lambda x: (x["repo"], x["path"]))
     )
 
 
@@ -152,12 +150,11 @@ def main():
     args = parser.parse_args()
 
     base_dir = Path(args.base_dir)
-    repo_roots = [base_dir / repo for repo in args.repos]
     out_dir = base_dir / args.output_dir
     out_dir.mkdir(parents=True, exist_ok=True)
 
     records = []
-    for root in repo_roots:
+    for root in (base_dir / repo for repo in args.repos):
         if not root.exists():
             continue
         for dp, dns, fns in os.walk(root):
@@ -219,8 +216,9 @@ def main():
 
     rows.sort(key=lambda r: (r["dup_lines_est"], r["copy_count"]), reverse=True)
 
-    csv_path = out_dir / "workspace-duplication-report.csv"
-    with csv_path.open("w", encoding="utf-8", newline="") as handle:
+    with (out_dir / "workspace-duplication-report.csv").open(
+        "w", encoding="utf-8", newline=""
+    ) as handle:
         writer = csv.DictWriter(
             handle,
             fieldnames=[
@@ -247,8 +245,9 @@ def main():
         else:
             per_repo[row["repos"].split(",")[0].strip()].append(row)
 
-    md_path = out_dir / "workspace-duplication-report.md"
-    with md_path.open("w", encoding="utf-8") as handle:
+    with (out_dir / "workspace-duplication-report.md").open(
+        "w", encoding="utf-8"
+    ) as handle:
         handle.write("# Workspace Duplication Report\n\n")
         handle.write(f"- Generated: {date.today().isoformat()}\n")
         handle.write(f"- Files analyzed: {len(records)}\n")
@@ -296,8 +295,8 @@ def main():
                     handle.write(f"   - {member}\n")
                 handle.write("\n")
 
-    print(f"Wrote {csv_path}")
-    print(f"Wrote {md_path}")
+    print(f"Wrote {out_dir / 'workspace-duplication-report.csv'}")
+    print(f"Wrote {out_dir / 'workspace-duplication-report.md'}")
     print(f"Total clusters: {len(rows)}")
 
 
