@@ -86,11 +86,14 @@ def normalize(text: str) -> str:
 
 
 def dup_score(cluster) -> int:
-    return sum(item["lines"] for item in cluster) - max(item["lines"] for item in cluster)
-
-
-def cluster_scope(cluster) -> str:
-    return "cross-repo" if len({item["repo"] for item in cluster}) > 1 else "per-repo"
+    total_lines = 0
+    max_lines = 0
+    for item in cluster:
+        line_count = item["lines"]
+        total_lines += line_count
+        if line_count > max_lines:
+            max_lines = line_count
+    return total_lines - max_lines
 
 
 def choose_canonical(cluster):
@@ -99,7 +102,7 @@ def choose_canonical(cluster):
         baseline = 0 if ("/all/" in p or p.startswith("environments/all/")) else 1
         return (baseline, len(item["path"]), item["repo"], item["path"])
 
-    return sorted(cluster, key=sort_key)[0]
+    return min(cluster, key=sort_key)
 
 
 def flatten_files(cluster):
@@ -204,7 +207,7 @@ def main():
         {
             "cluster_id": f"normalized-{cluster_num:04d}",
             "mode": "normalized",
-            "scope": cluster_scope(cluster),
+            "scope": "cross-repo" if len(repos) > 1 else "per-repo",
             "repos": ", ".join(repos),
             "repo_count": len(repos),
             "copy_count": len(cluster),
@@ -257,17 +260,10 @@ def main():
         handle.write(f"- Files analyzed: {len(records)}\n")
         handle.write("- Matching mode: normalized only\n")
         handle.write(f"- Normalized clusters: {len(norm_clusters)}\n")
-        handle.write(
-            f"- Cross-repo clusters: {sum(1 for row in rows if row['scope'] == 'cross-repo')}\n\n"
-        )
+        handle.write(f"- Cross-repo clusters: {len(cross)}\n\n")
 
         handle.write("## Top Cross-Repo Clusters\n\n")
-        for i, row in enumerate(
-            sorted(cross, key=lambda r: (r["dup_lines_est"], r["copy_count"]), reverse=True)[
-                :25
-            ],
-            1,
-        ):
+        for i, row in enumerate(cross[:25], 1):
             handle.write(
                 f"{i}. **{row['cluster_id']}** ({row['mode']}): copies={row['copy_count']}, dup_lines~{row['dup_lines_est']}\n"
             )
@@ -281,14 +277,7 @@ def main():
 
         for repo in sorted(per_repo):
             handle.write(f"## Top Per-Repo Clusters: {repo}\n\n")
-            for i, row in enumerate(
-                sorted(
-                    per_repo[repo],
-                    key=lambda r: (r["dup_lines_est"], r["copy_count"]),
-                    reverse=True,
-                )[:20],
-                1,
-            ):
+            for i, row in enumerate(per_repo[repo][:20], 1):
                 handle.write(
                     f"{i}. **{row['cluster_id']}** ({row['mode']}): copies={row['copy_count']}, dup_lines~{row['dup_lines_est']}\n"
                 )
