@@ -56,6 +56,7 @@ TEXT_EXTS = {
     ".bat",
     ".conf",
     ".cfg",
+    ".cs",
     ".csv",
     ".groovy",
     ".ini",
