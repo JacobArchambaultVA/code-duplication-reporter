@@ -7,50 +7,6 @@ from datetime import date
 from pathlib import Path
 
 
-DEFAULT_REPOS = [
-    "ped-270-config/",
-    "ped-276-config/",
-    "ped-277-config/",
-    "ped-278-config/",
-    "ped-834-config/",
-    "ped-835-config/",
-    "ped-837-config/",
-    "ped-8pdl-config/",
-    "ped-999-config/",
-    "ped-ack-config/",
-    "ped-database/",
-    "ped-deidentify-config/",
-    "ped-devops/",
-    "ped-environments-config/",
-    "ped-fms-config/",
-    "ped-infra-config/",
-    "ped-paidclaims-config/",
-    "ped-pharmacy-config/",
-    "ped-powerbi/",
-    "ped-product/",
-    "ped-promotionrequest-powerapp/",
-    "ped-remediation-config/",
-    "ped-sor-config/",
-    "ped-services-270/",
-    "ped-services-276/",
-    "ped-services-277/",
-    "ped-services-278/",
-    "ped-services-834/",
-    "ped-services-835/",
-    "ped-services-837/",
-    "ped-services-8pdl/",
-    "ped-services-999/",
-    "ped-services-ack/",
-    "ped-services-common/",
-    "ped-services-deidentify/",
-    "ped-services-fms/",
-    "ped-services-paidclaims/",
-    "ped-services-pharmacy/",
-    "ped-services-remediation/",
-    "ped-services-sor/",
-    "ped-services-test-tools/",
-]
-
 TEXT_EXTS = {
     ".bat",
     ".conf",
@@ -189,7 +145,7 @@ def main():
     parser.add_argument(
         "--repos",
         nargs="*",
-        default=DEFAULT_REPOS,
+        default=[],
         help="Repository folder names under base-dir",
     )
     parser.add_argument(
