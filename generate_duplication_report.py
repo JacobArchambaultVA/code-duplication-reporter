@@ -174,12 +174,6 @@ def main():
         default="duplication-reports",
         help="Output directory under base-dir",
     )
-    parser.add_argument(
-        "--min-chars",
-        type=int,
-        default=80,
-        help="Skip tiny files under this many non-whitespace chars",
-    )
     args = parser.parse_args()
 
     base_dir = Path(args.base_dir)
@@ -197,7 +191,7 @@ def main():
                 if not is_text_file(path):
                     continue
                 text = read_text(path)
-                if not text or len(text.strip()) < args.min_chars:
+                if not text:
                     continue
 
                 records.append(
@@ -214,10 +208,9 @@ def main():
 
     norm_map = defaultdict(list)
     for record in records:
-        if len(record["norm_text"]) >= args.min_chars:
-            norm_map[
-                hashlib.sha1(record["norm_text"].encode("utf-8", "ignore")).hexdigest()
-            ].append(record)
+        norm_map[
+            hashlib.sha1(record["norm_text"].encode("utf-8", "ignore")).hexdigest()
+        ].append(record)
 
     norm_clusters = [c for c in norm_map.values() if len(c) >= 2]
 
