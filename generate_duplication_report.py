@@ -201,8 +201,6 @@ def main():
             hashlib.sha1(record["norm_text"].encode("utf-8", "ignore")).hexdigest()
         ].append(record)
 
-    norm_clusters = [c for c in norm_map.values() if len(c) >= 2]
-
     rows = [
         {
             "cluster_id": f"normalized-{cluster_num:04d}",
@@ -216,7 +214,9 @@ def main():
             "canonical_path": canonical["path"],
             "files": flatten_files(cluster),
         }
-        for cluster_num, cluster in enumerate(norm_clusters, 1)
+        for cluster_num, cluster in enumerate(
+            (cluster for cluster in norm_map.values() if len(cluster) >= 2), 1
+        )
         if (repos := sorted({item["repo"] for item in cluster}))
         if (canonical := choose_canonical(cluster))
     ]
@@ -259,7 +259,7 @@ def main():
         handle.write(f"- Generated: {date.today().isoformat()}\n")
         handle.write(f"- Files analyzed: {len(records)}\n")
         handle.write("- Matching mode: normalized only\n")
-        handle.write(f"- Normalized clusters: {len(norm_clusters)}\n")
+        handle.write(f"- Normalized clusters: {len(rows)}\n")
         handle.write(f"- Cross-repo clusters: {len(cross)}\n\n")
 
         handle.write("## Top Cross-Repo Clusters\n\n")
