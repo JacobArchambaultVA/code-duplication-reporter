@@ -33,6 +33,13 @@ python generate_duplication_report.py \
   --repos-file ../va-dev-onboarding/repos.txt
 ```
 
+Example passing in a subset of neighboring repos from the command line:
+
+```bash
+python generate_duplication_report.py \
+  --repos-file $(ls .. | grep -i ped-services)
+```
+
 Default paths:
 
 - `--base-dir`: `~/source/repos`
