@@ -25,14 +25,6 @@ python generate_duplication_report.py \
   --output-dir duplication-reports
 ```
 
-Example using a repo list file from a neighboring folder:
-
-```bash
-python generate_duplication_report.py \
-  --base-dir ~/source/repos \
-  --repos-file ../va-dev-onboarding/repos.txt
-```
-
 Example passing in a subset of neighboring repos from the command line:
 
 ```bash
