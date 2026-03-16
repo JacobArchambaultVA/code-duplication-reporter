@@ -6,7 +6,8 @@ from pathlib import Path
 from duplication_block_mode import iter_block_hashes, merge_overlapping_clusters
 from duplication_constants import IGNORE_DIRS, TEXT_EXTS
 from duplication_file_mode import add_file_mode_match
-from duplication_io import is_text_file, read_text, write_workspace_report
+from duplication_read_io import is_text_file, read_text
+from duplication_write_io import write_workspace_report
 from duplication_pure import (
     dup_score,
     flatten_files,
