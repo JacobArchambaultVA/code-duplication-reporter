@@ -75,14 +75,6 @@ def read_text(path: Path):
     return None
 
 
-def normalize(text: str) -> str:
-    return "\n".join(
-        stripped
-        for line in text.splitlines()
-        if (stripped := line.strip()) and not stripped.startswith("#")
-    )
-
-
 def normalize_lines(text: str):
     return [
         stripped
@@ -262,7 +254,9 @@ def main():
                         )
                 else:
                     norm_map[
-                        hashlib.sha1(normalize(text).encode("utf-8", "ignore")).hexdigest()
+                        hashlib.sha1(
+                            "\n".join(normalize_lines(text)).encode("utf-8", "ignore")
+                        ).hexdigest()
                     ].append(
                         {
                             "repo": root.name,
