@@ -167,7 +167,7 @@ def main():
         for cluster_num, cluster in enumerate(
             (cluster for cluster in norm_map.values() if len(cluster) >= 2), 1
         )
-        if (repos := sorted({item["repo"] for item in cluster}))
+        if (repos := {item["repo"] for item in cluster})
     ]
 
     rows.sort(key=lambda r: (r["dup_lines_est"], r["copy_count"]), reverse=True)
