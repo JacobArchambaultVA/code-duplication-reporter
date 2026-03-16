@@ -54,10 +54,10 @@ IGNORE_DIRS = {
 }
 
 
-def is_text_file(path: Path) -> bool:
+def is_text_file(path: Path, text_extensions) -> bool:
     name = path.name.lower()
     return (
-        path.suffix.lower() in TEXT_EXTS
+        path.suffix.lower() in text_extensions
         or "jenkinsfile" in name
         or "dockerfile" in name
     )
@@ -119,9 +119,16 @@ def main():
         default="duplication-reports",
         help="Output directory under base-dir",
     )
+    parser.add_argument(
+        "--text-extensions",
+        nargs="*",
+        default=TEXT_EXTS,
+        help="List of text file extensions to scan (for example: .py .cs .json)",
+    )
     args = parser.parse_args()
 
     base_dir = Path(args.base_dir)
+    text_extensions = {ext.lower() for ext in args.text_extensions}
 
     repos = args.repos
     out_dir = base_dir / args.output_dir
@@ -136,7 +143,7 @@ def main():
             dns[:] = [d for d in dns if d.lower() not in IGNORE_DIRS]
             for filename in fns:
                 path = Path(dp) / filename
-                if not is_text_file(path):
+                if not is_text_file(path, text_extensions):
                     continue
                 text = read_text(path)
                 if not text:

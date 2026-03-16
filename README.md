@@ -21,6 +21,7 @@ Example with custom repos and output dir:
 python generate_duplication_report.py \
   --base-dir ~/source/repos \
   --repos repo-a repo-b repo-c \
+  --text-extensions .py .cs .json .yaml \
   --output-dir duplication-reports
 ```
 
@@ -35,4 +36,5 @@ Default paths:
 
 - `--base-dir`: `~/source/repos`
 - `--output-dir`: `duplication-reports` (created under `--base-dir`)
+- `--text-extensions`: built-in set of common text/code/config extensions
 
