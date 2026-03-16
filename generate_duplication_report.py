@@ -102,12 +102,8 @@ def main():
                             "lines": text.count("\n") + 1,
                         }
                     )
-
-    if block_mode:
-        raw_clusters = [cluster for cluster in norm_map.values() if len(cluster) >= 2]
-        clusters = merge_overlapping_clusters(raw_clusters)
-    else:
-        clusters = [cluster for cluster in norm_map.values() if len(cluster) >= 2]
+    raw_clusters = [cluster for cluster in norm_map.values() if len(cluster) >= 2]
+    clusters = merge_overlapping_clusters(raw_clusters) if block_mode else raw_clusters
 
     rows = [
         {
