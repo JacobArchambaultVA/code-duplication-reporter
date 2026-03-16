@@ -11,7 +11,6 @@ Scans a set of repositories, finds duplicated text-based files by normalized con
   - `cross-repo` (same content in multiple repos)
   - `per-repo` (duplicates inside one repo)
 - Writes:
-  - `workspace-duplication-report.csv`
   - `workspace-duplication-report.md`
 
 ## Run

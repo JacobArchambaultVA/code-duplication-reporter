@@ -1,5 +1,4 @@
 import argparse
-import csv
 import hashlib
 import os
 from collections import defaultdict
@@ -185,27 +184,6 @@ def main():
 
     rows.sort(key=lambda r: (r["dup_lines_est"], r["copy_count"]), reverse=True)
 
-    with (out_dir / "workspace-duplication-report.csv").open(
-        "w", encoding="utf-8", newline=""
-    ) as handle:
-        writer = csv.DictWriter(
-            handle,
-            fieldnames=[
-                "cluster_id",
-                "mode",
-                "scope",
-                "repos",
-                "repo_count",
-                "copy_count",
-                "dup_lines_est",
-                "canonical_repo",
-                "canonical_path",
-                "files",
-            ],
-        )
-        writer.writeheader()
-        writer.writerows(rows)
-
     per_repo = defaultdict(list)
     cross = []
     for row in rows:
@@ -250,7 +228,6 @@ def main():
                     handle.write(f"   - {member}\n")
                 handle.write("\n")
 
-    print(f"Wrote {out_dir / 'workspace-duplication-report.csv'}")
     print(f"Wrote {out_dir / 'workspace-duplication-report.md'}")
     print(f"Total clusters: {len(rows)}")
 
