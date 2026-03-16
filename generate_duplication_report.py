@@ -1,16 +1,15 @@
 import argparse
-import hashlib
 import os
 from collections import defaultdict
 from pathlib import Path
 
+from duplication_block_mode import iter_block_hashes, merge_overlapping_clusters
 from duplication_constants import IGNORE_DIRS, TEXT_EXTS
+from duplication_file_mode import add_file_mode_match
 from duplication_io import is_text_file, read_text, write_workspace_report
 from duplication_pure import (
     dup_score,
     flatten_files,
-    iter_block_hashes,
-    merge_overlapping_clusters,
     normalize_lines,
 )
 
@@ -76,31 +75,28 @@ def main():
                     continue
 
                 analyzed_files += 1
+                normalized_lines = normalize_lines(text)
+                relative_path = str(path.relative_to(root)).replace("\\", "/")
                 if block_mode:
-                    lines = normalize_lines(text)
                     for block_hash, start, end in iter_block_hashes(
-                        lines, args.min_dup_lines
+                        normalized_lines, args.min_dup_lines
                     ):
                         norm_map[block_hash].append(
                             {
                                 "repo": root.name,
-                                "path": str(path.relative_to(root)).replace("\\", "/"),
+                                "path": relative_path,
                                 "lines": args.min_dup_lines,
                                 "start": start,
                                 "end": end,
                             }
                         )
                 else:
-                    norm_map[
-                        hashlib.sha1(
-                            "\n".join(normalize_lines(text)).encode("utf-8", "ignore")
-                        ).hexdigest()
-                    ].append(
-                        {
-                            "repo": root.name,
-                            "path": str(path.relative_to(root)).replace("\\", "/"),
-                            "lines": text.count("\n") + 1,
-                        }
+                    add_file_mode_match(
+                        norm_map,
+                        normalized_lines,
+                        root.name,
+                        relative_path,
+                        text.count("\n") + 1,
                     )
     raw_clusters = [cluster for cluster in norm_map.values() if len(cluster) >= 2]
     clusters = merge_overlapping_clusters(raw_clusters) if block_mode else raw_clusters
