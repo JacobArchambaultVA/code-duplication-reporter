@@ -203,20 +203,22 @@ def main():
         help="List of text file extensions to scan (for example: .py .cs .json)",
     )
     parser.add_argument(
-        "--block-mode",
-        action="store_true",
-        help="Enable normalized block-level duplicate detection instead of whole-file matching",
-    )
-    parser.add_argument(
         "--min-dup-lines",
         type=int,
-        default=10,
-        help="Minimum normalized contiguous lines for block duplication matching",
+        default=None,
+        help=(
+            "Enable block-level duplication matching using this minimum number "
+            "of normalized contiguous lines"
+        ),
     )
     args = parser.parse_args()
 
+    if args.min_dup_lines is not None and args.min_dup_lines < 1:
+        parser.error("--min-dup-lines must be a positive integer")
+
     base_dir = Path(args.base_dir)
     text_extensions = {ext.lower() for ext in args.text_extensions}
+    block_mode = args.min_dup_lines is not None
 
     repos = args.repos
     out_dir = base_dir / args.output_dir
@@ -238,7 +240,7 @@ def main():
                     continue
 
                 analyzed_files += 1
-                if args.block_mode:
+                if block_mode:
                     lines = normalize_lines(text)
                     for block_hash, start, end in iter_block_hashes(
                         lines, args.min_dup_lines
@@ -265,7 +267,7 @@ def main():
                         }
                     )
 
-    if args.block_mode:
+    if block_mode:
         raw_clusters = [cluster for cluster in norm_map.values() if len(cluster) >= 2]
         clusters = merge_overlapping_clusters(raw_clusters)
     else:
@@ -302,7 +304,7 @@ def main():
         handle.write("# Workspace Duplication Report\n\n")
         handle.write(f"- Generated: {date.today().isoformat()}\n")
         handle.write(f"- Files analyzed: {analyzed_files}\n")
-        if args.block_mode:
+        if block_mode:
             handle.write("- Matching mode: normalized block matching\n")
             handle.write(f"- Min duplicated block lines: {args.min_dup_lines}\n")
         else:
