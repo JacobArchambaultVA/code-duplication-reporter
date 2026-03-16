@@ -94,15 +94,6 @@ def dup_score(cluster) -> int:
     return total_lines - max_lines
 
 
-def choose_canonical(cluster):
-    def sort_key(item):
-        p = item["path"].lower()
-        baseline = 0 if ("/all/" in p or p.startswith("environments/all/")) else 1
-        return (baseline, len(item["path"]), item["repo"], item["path"])
-
-    return min(cluster, key=sort_key)
-
-
 def flatten_files(cluster):
     return "; ".join(
         f"{item['repo']}:{item['path']} ({item['lines']} lines)"
@@ -171,15 +162,12 @@ def main():
             "repo_count": len(repos),
             "copy_count": len(cluster),
             "dup_lines_est": dup_score(cluster),
-            "canonical_repo": canonical["repo"],
-            "canonical_path": canonical["path"],
             "files": flatten_files(cluster),
         }
         for cluster_num, cluster in enumerate(
             (cluster for cluster in norm_map.values() if len(cluster) >= 2), 1
         )
         if (repos := sorted({item["repo"] for item in cluster}))
-        if (canonical := choose_canonical(cluster))
     ]
 
     rows.sort(key=lambda r: (r["dup_lines_est"], r["copy_count"]), reverse=True)
@@ -208,9 +196,6 @@ def main():
                 f"{i}. **{row['cluster_id']}** ({row['mode']}): copies={row['copy_count']}, dup_lines~{row['dup_lines_est']}\n"
             )
             handle.write(f"   - Repos: {row['repos']}\n")
-            handle.write(
-                f"   - Canonical: {row['canonical_repo']}:{row['canonical_path']}\n"
-            )
             for member in row["files"].split("; ")[:6]:
                 handle.write(f"   - {member}\n")
             handle.write("\n")
@@ -220,9 +205,6 @@ def main():
             for i, row in enumerate(per_repo[repo][:20], 1):
                 handle.write(
                     f"{i}. **{row['cluster_id']}** ({row['mode']}): copies={row['copy_count']}, dup_lines~{row['dup_lines_est']}\n"
-                )
-                handle.write(
-                    f"   - Canonical: {row['canonical_repo']}:{row['canonical_path']}\n"
                 )
                 for member in row["files"].split("; ")[:6]:
                     handle.write(f"   - {member}\n")
